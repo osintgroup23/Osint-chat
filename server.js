@@ -1,14 +1,18 @@
 const express = require('express');
-const app = express();
-const http = require('http').createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(http, { cors: { origin: "*" } });
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
 
-app.use(express.static('public'));
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
+
 let messages = [];
 
+app.use(express.static(path.join(__dirname, 'public')));
+
 io.on('connection', (socket) => {
-  socket.emit('init', messages.slice(-50));
+  socket.emit('init', messages);
   socket.on('send', (data) => {
     messages.push(data);
     if(messages.length > 100) messages.shift();
@@ -16,4 +20,4 @@ io.on('connection', (socket) => {
   });
 });
 
-module.exports = app;
+module.exports = httpServer;
